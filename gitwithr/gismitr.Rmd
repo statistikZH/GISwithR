@@ -6,6 +6,9 @@ output:
   html_document:
     css: style.css
     template: zhtemplate.html
+    
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "..", output_file = "index.html") })
 ---
 
 <script src="js/hideOutput.js"></script>
