@@ -40,7 +40,9 @@ RStudio ist in R-Kreisen die bekannteste Programmier-Entwicklungsoberfläche. Si
 Es gibt immer mehr und benutzerfreundlichere Libraries die für GIS-Arbeiten verwendet werden können.
 Die Libraries verwenden im Hintergrund die GDAL-Library.
 Dank diesen Libraries können GIS-Prozesse relativ einfach gescripted werdne und somit auch automatisiert.
-
+Es gibt auch die Möglichkeit spatial DB's einzubinden.
+Die bekannteste ist PostGIS. 
+Leider fehlt die Möglichkeit eine SDE-Verbindung aufzubauen ohne dass ArcGIS installiert ist.
 
 Vektor Libraries:
 
