@@ -23,11 +23,11 @@ R ist eine öffentliche Statistik-Programmiersprache, welche sich für eine brei
 
 ### Was ist RStudio
 
-RStudio ist in R-Kreisen die bekannteste Programmier-Entwicklungsoberfläche. Sie wurde von der Firma RSTudio entwickelt und es gibt eine open-saurce Version.
+RStudio ist in R-Kreisen die bekannteste Programmier-Entwicklungsoberfläche. Sie wurde von der Firma RStudio entwickelt und es gibt eine open-source Version.
 
 ### Warum R
 
-- open source Software
+- open-source Software
 - sehr gut dokumentiert, da Verwendung weit verbreitet
 - wiederkehrende Datenaufbereitungs-Prozesse lassen sich leicht automatisieren 
 - sehr stark in data wrangling
@@ -37,7 +37,10 @@ RStudio ist in R-Kreisen die bekannteste Programmier-Entwicklungsoberfläche. Si
 
 ### GIS mit R
 
-Libraries die auf GDAL zugreiffen
+Es gibt immer mehr und benutzerfreundlichere Libraries die für GIS-Arbeiten verwendet werden können.
+Die Libraries verwenden im Hintergrund die GDAL-Library.
+Dank diesen Libraries können GIS-Prozesse relativ einfach gescripted werdne und somit auch automatisiert.
+
 
 Vektor Libraries:
 
