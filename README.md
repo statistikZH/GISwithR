@@ -33,9 +33,9 @@ Vielen Dank an folgende Personen die mitgewirkt haben:
 
 ## Kontakt
 
-Vorname Nachname  <br>
+Thomas Knecht  <br>
 thomas.knecht@statistik.ji.zh.ch <br>
-Telefonnummer <br>
+
 
 ![Twitter Follow](https://img.shields.io/twitter/follow/statistik_zh?style=social)
 
