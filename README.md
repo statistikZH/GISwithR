@@ -9,6 +9,9 @@
 Dieses Repo zeigt anhand eines konkreten Beispiels, wie wir beim statistischem Amt mit GIS in R arbeiten.
 Die Datensätze, welche für das Beispiel verwendet werden sind OGD, sie liegen aber trotzdem noch in diesem Repo, um einen einfachen Start zu ermöglichen.
 
+Das Beispiel wird über gihub-pages publiziert:
+
+https://statistikzh.github.io/GISwithR/
 
 ## Voraussetzungen
 
