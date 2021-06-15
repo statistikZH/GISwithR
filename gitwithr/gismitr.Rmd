@@ -23,14 +23,16 @@ R ist eine öffentliche Statistik-Programmiersprache, welche sich für eine brei
 
 ### Was ist RStudio
 
-RStudio ist in R-Kreisen die bekannteste IDLE. Sie wurde von der Firma RSTudio entwickelt und es gibt eine open-saurce Version.
+RStudio ist in R-Kreisen die bekannteste Programmier-Entwicklungsoberfläche. Sie wurde von der Firma RSTudio entwickelt und es gibt eine open-saurce Version.
 
 ### Warum R
 
-- open source software
+- open source Software
+- sehr gut dokumentiert, da Verwendung weit verbreitet
+- wiederkehrende Datenaufbereitungs-Prozesse lassen sich leicht automatisieren 
 - sehr stark in data wrangling
 - unterschiedlichste Tools, die es dem Datenanalysten vereinfachen ganze Prozessketten selbst zu erstellen ohne andere Programmiersprachen zu können
-- im Statistischen Amt weit verbreitet
+
 
 
 ### GIS mit R
@@ -60,14 +62,28 @@ Buch zur Einführung:
 
 ## Ausgangslage
 
-Wir bekommen eine Anfrage der katholischen Kirche, die wissen wollen, 
-wie gross der Anteil an über 80 Jährigen in den Kirchgemeinden leben.
-Zur Vereinfachung wollen wir die gesamte Bevölkerung miteinbeziehen und nicht nur die katholische.
+Die katholischen Kirche möchte wissen wie gross der Anteil der ständigen Wohnbevökerung an über 80 Jährigen in den Kirchgemeinden ist. 
 
-Wir haben ein Kirchgemeinde Shapefile aus dem Jahr 2019, die Anfragenden wollen 
-die Zahlen aber auf dem Kirchgemeindestand 2020 haben.
+Inputdaten: 
+Kirchengemeinde (shp); Stand 2019
+städnigen Wohnbervölkerung (sph); Stand 2020
 
-Vom Jahr 2019 auf das Jahr 2020 hat sich die Kirchgemeinde "Hirzel-Schönenberg-Hütten" getrennt und Hirzel hat sich der Kirchgemeinde Horgen, die anderen zwei der Kirchgemeinde Wädenswil angeschlossen. 
+Methodik
+
+1. Kirchengemeinde: Stand 2019 => Stand 2020:
+
+    A) Die Kirchgemeinde "Hirzel-Schönenberg-Hütten" wurde  getrennt:  
+        => Hirzel hat sich der Kirchgemeinde Horgen angeschlossen.
+        
+        => Schöneberg und Hütten haben sich der Kirchgemeinde Wädenswil angeschlossen.
+       
+2. Die Daten der Bevölkerungsstatistik werden auf die neuen Kirchgemeinden aggregiert.
+
+***Hinweis:***
+
+Da die Bevölkerungsstatistik auf eine Hektare aggregiert werden, stimmen die aggregierten Zahlen nicht ganz mit der realität überein.
+Wir verwenden die Bevölkerungsstatistik da die Daten OGD sind und ihr so das Beispiel durchspielen könnt. 
+Wir haben die Daten eigentlich auf EGID genau und können auf dieser Basis auswertungen machen.
 
 ## Berechnung
 
@@ -78,18 +94,16 @@ Zudem wird eine Funktion erstellt, welche die Shapefiles auf nicht valide Geomet
 
 ```{r, message=FALSE, warning=FALSE}
 # Laden aller benötigten Packages
-library(sf)
-library(dplyr)
-library(stringr)
-library(dbplyr)
-library(ggplot2)
-library(ggspatial)
-library(mapview)
-library(leaflet)
+library(sf)         # Vektor-Library
+library(dplyr)      # Library zur Datenaufbereitung
+library(stringr)    # Library für regex
+library(ggplot2)    # Library zur Plot-Erstellung
+library(ggspatial)  # Library mit Map-Features (Nordpfeil usw.)
+library(mapview)    # Library für interaktive Karten
 
-# Hilfsfunktion um die Validität der Geometrien zu prüfen. Falls eine Geometrie kaputt ist, gibt es eine Warnung.
+# Hilfsfunktion um die Validität der Geometrien zu prüfen. Falls eine Geometrie kaputt ist, gibt es eine Warnung. Die Topologie kann jedoch nicht geprüft werden.
 check_validity <- function(sf_df){
-  if(FALSE %in% st_is_valid(sf_df)){
+  if(FALSE %in% sf::st_is_valid(sf_df)){
     warning("There is an invalid geometry in the Dataset. Use st_make_valid() to repair the geometry.")
   }else{
     print("The geometry is valid.")
@@ -106,10 +120,10 @@ Der Import der Datensätze, in unserem Fall shapefiles, kann mit `st_read()` gem
 ```{r, message=FALSE, warning=FALSE}
 
 # Importieren des Kirchgemeinden-Shapefiles des Jahres 2019
-kg <- st_read(paste0("../shapefiles/kirchgemeinden_2019.shp"), stringsAsFactors = FALSE, crs=2056)
+kg <- sf::st_read(paste0("../shapefiles/kirchgemeinden_2019.shp"), stringsAsFactors = FALSE, crs=2056)
 
 # Importieren des Gemeindegrenzen-Shapefiles des Jahres 2020
-gem <- st_read(paste0("../shapefiles/gemeinden_2020.shp"), stringsAsFactors = FALSE, crs=2056, query = "SELECT GDE_ID, ART_N FROM \"gemeinden_2020\" ")
+gem <- sf::st_read(paste0("../shapefiles/gemeinden_2020.shp"), stringsAsFactors = FALSE, crs=2056, query = "SELECT GDE_ID, ART_N FROM \"gemeinden_2020\" ")
 
 ```
 </div>
@@ -129,11 +143,13 @@ plot(kg$geometry)
 ```
 </div>
 
-
-```{r, eval=F}
+<div class="fold o">
+```{r}
 # dynamischer Plot
 mapview(kg)
 ```
+</div>
+
 
 ### Überprüfen ob die Geometrien der beiden Objekten ok sind
 
@@ -159,25 +175,20 @@ Um den Prozess relativ simple zu halten, extrahiere ich nur die benötigten Poly
 
 <div class="fold o">
 ```{r, fig.show="hold", out.width="50%", message=FALSE, warning=FALSE}
-# Filtern der Kirchgemeinde mit der Nummer 19
+# Filtern der Kirchgemeinde mit der Nummer 19 (Hirzel-Schönenberg-Hütten)
 kg_19 <- kg %>% filter(Kirchnumme == 19)
 
-# Filtern der politischen Gemeinden
+# Filtern der politischen Gemeinden (Horgen, Wädenswil)
 gem_h_w <- gem %>% filter(GDE_ID %in% c(293, 295))
 
-ggplot() +
-  geom_sf(data = gem_h_w) +
-  geom_sf(data = kg_19, color = "red", fill = NA) +
-  theme_bw()  +
-  theme(panel.grid.major = element_line(colour = "transparent")) +
-  coord_sf(datum = NA)
+
 
 ```
 </div>
 
-```{r, eval=FALSE}
+```{r}
 # interaktive Darstellung
-mapview(kg_19, zcol = "ART_TEXT", col.regions = c("red")) + mapview(gem_h_w, zcol = "ART_N")
+mapview(gem_h_w, zcol = "ART_N") + mapview(kg_19, zcol = "ART_TEXT", col.regions = c("red"))
 ```
 
 
@@ -188,6 +199,7 @@ wird eine Mapping-Tabelle erstellt.
 
 <div class="fold o">
 ```{r, message=FALSE, warning=FALSE}
+# Erstellung einer Tabelle mit tibble
 kg_fus_tibble <- tibble(
   GDE_ID = c(293, 295),
   Kirchnumme = c(45, 21),
@@ -196,6 +208,7 @@ kg_fus_tibble <- tibble(
   ART_CODE = c(1,1)
 )
 
+# Darstellen der Tabelle
 knitr::kable(kg_fus_tibble)
 ```
 </div>
@@ -207,11 +220,16 @@ Mit dem Verschnitt der beiden Layers wird die Kirchgemeinde in mehrere Polygone 
 <div class="fold o">
 ```{r, message=FALSE, warning=FALSE}
 
+# Verschneiden der Kirchgemeinde mit den politischen Gemeinde um die Kirchgemeinde zu trennen. 
+#Der Output wird als Multipolygon ausgegeben
 union_gem <- st_intersection(kg_19, gem_h_w) %>% st_cast("MULTIPOLYGON")
 
+mapview(union_gem, zcol = "GDE_ID")
+
+# Multipolygon -> single Polygon
 union_single <- st_cast(union_gem, "POLYGON")
 
-knitr::kable(union_single)
+mapview(union_single, zcol = "GDE_ID")
 ```
 </div>
 
@@ -222,12 +240,15 @@ Es gibt einige Sliverpolygone, welche den zwei grossen Polygonen zugeordnet werd
 <div class="fold o">
 ```{r, message=FALSE, warning=FALSE}
 
+# Die sliverpolygon kleiner als 1000m2 werden der Kirchgemeinde Horgen zugeordnet.
+# Wir können das so machen, da es nur sliver-polygone an der Grenze zwischen der 
+# Kirchgemeinde Horgen und der politischen Gemeinde Wädenswil auftreten.
 union_merged <- union_single %>% mutate(area = as.numeric(st_area(.))) %>% 
   mutate(GDE_ID = ifelse(area < 1000, 295, GDE_ID)) %>% 
   group_by(GDE_ID) %>% 
   summarize()
 
-knitr::kable(union_merged)
+mapview(union_merged, zcol = "GDE_ID")
 ```
 </div>
 
@@ -238,6 +259,7 @@ Die neuen Polygone enthalten zur Zeit nur die politische Gemeinde-ID und die alt
 <div class="fold o">
 ```{r, message=FALSE, warning=FALSE}
 
+# Die mapping Tabelle wird nun an die beiden neuen Polygone hinzugefügt um die Kirchennummer den Polygone zuzuordnen.
 new_kirchid <- union_merged %>% 
   left_join(kg_fus_tibble, by = "GDE_ID") %>% 
   select(-GDE_ID)
@@ -252,6 +274,9 @@ Die neuen Polygone werden dann mit den bestehenden Kirchgemeinden gemerged um ei
 
 <div class="fold o">
 ```{r, fig.show="hold", out.width="50%", message=FALSE, warning=FALSE}
+
+# Ersetzen der alten Kirchgemeinde durch die zwei neuen Polygone.
+# Dann werden die Kirchgemeinden zusammengefügt
 kg_2020 <- kg %>% 
   filter(Kirchnumme != 19 | is.na(Kirchnumme)) %>% 
   bind_rows(new_kirchid) %>% 
@@ -279,8 +304,10 @@ Da bereits die Anteile auf Hektarraster-Ebene berechnet wurden, müssen wir zuer
 <div class="fold o">
 ```{r, message=FALSE, warning=FALSE}
 
-bevstatistik <- st_read("../shapefiles/bevstatistik_punkte.shp")
+# laden der Bevölkerungsstatistik
+bevstatistik <- sf::st_read("../shapefiles/bevstatistik_punkte.shp")
 
+# Vorbereiten der Daten
 bevstatistik_abs <- bevstatistik %>% 
   mutate_at(vars(matches("_P")), ~round(PERS_N/100*.)) %>% 
   rename_at(vars(matches("_P")), ~str_replace_all(., "_P", "_A")) %>% 
@@ -296,9 +323,10 @@ Die Punktdaten und Kirchgemeinden werden verschnitten um dann über die Kirchgem
 <div class="fold o">
 ```{r, cache=TRUE, message=FALSE, warning=FALSE}
 
-bev_within_kg <- st_intersection(bevstatistik_abs, kg_2020)
+# Verschneiden der Punktdaten mit den Kirchgemeinden
+bev_within_kg <- sf::st_intersection(bevstatistik_abs, kg_2020)
 
-knitr::kable(head(bev_within_kg, 10))
+mapview(bev_within_kg %>% filter(Kirchnumme==45))
 ```
 </div>
 
@@ -309,6 +337,7 @@ Die Punktdaten besitzen nun die Information der Kirchgemeinde und wir können di
 <div class="fold o">
 ```{r, message=FALSE, warning=FALSE}
 
+# aggregieren der Daten
 anteil_ue80_pro_kg <- bev_within_kg %>% 
   st_drop_geometry() %>% 
   filter(!is.na(Kirchnumme)) %>% 
@@ -335,10 +364,10 @@ kg_2020_with_anteil <- kg_2020 %>%
   select(Kirchnumme, anteil_ue_80)
 
 
-#mapview(kg_2020_with_anteil)
 
+# plot der Daten
 ggplot(kg_2020_with_anteil) +
-  geom_sf(aes(fill = anteil_ue_80)) +
+  geom_sf(aes(fill = anteil_ue_80), color = "white") +
   theme_bw()  +
   theme(panel.grid.major = element_line(colour = "transparent")) +
   scale_fill_continuous(name = "Anteil ü80 [%]") +

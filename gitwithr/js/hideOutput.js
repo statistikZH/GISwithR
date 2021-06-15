@@ -25,6 +25,7 @@ $(document).ready(function() {
       $('pre.kable', this).prepend("<div class=\"showopt\">Show Table</div><br style=\"line-height:20px;\"/>");
       $('pre.kable', this).children('table').addClass('folded');
 
+
     }
   });
 
