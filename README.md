@@ -18,7 +18,7 @@ Um aber eine schöne Programmieroberfläche für R zu haben, verwenden wir im Am
 
 Packages können dann im R mit `install.packages("package_name")` installiert werden.
 
-Für das sf Package wird ebenfalls RGDAL gebraucht. 
+Für das sf Package wird [GDAL](https://gdal.org/) gebraucht. Eventuell erledigt R direkt den download, ansonsten muss es noch separat installiert werden.
 
 Auf den Kantons-Laptops sind leider nicht in allen Direktionen die R und RStudio installationen verfügbar.
 Für einen Test empfehle ich den privaten Laptop zu verwenden.
